@@ -4,7 +4,7 @@
 [![DSH plugin](https://img.shields.io/badge/DSH-plugin-2563eb)](https://github.com/topics/dsh-plugin)
 [![Conda](https://img.shields.io/badge/environment-Conda-44a833)](https://docs.conda.io/)
 
-这个插件给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的每个工作区记住一个 Conda 环境。它集成在原生对话输入栏里，不需要另起网页。
+这个插件给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的每个工作区记住一个 Conda 环境。
 
 ![Conda Workspace Environment 演示](./assets/demo.gif)
 
