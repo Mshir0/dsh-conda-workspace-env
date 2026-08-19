@@ -71,6 +71,7 @@ export function apply(ctx) {
         if (!root) return json(res, 403, { error: 'Workspace is not registered' });
         if (url.pathname === '/conda-workspace-env/selection' && req.method === 'GET') return json(res, 200, await readSelection(root));
         if (url.pathname === '/conda-workspace-env/selection' && req.method === 'POST') {
+          if (!body.prefix) return json(res, 200, await saveSelection(root, null));
           const environments = await condaEnvironments();
           const selected = environments.find(item => item.prefix === body.prefix);
           if (!selected) return json(res, 400, { error: 'Unknown Conda environment' });
