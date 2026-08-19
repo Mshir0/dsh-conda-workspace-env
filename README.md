@@ -6,7 +6,7 @@
 
 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 工作区选择并持久化 Conda 虚拟环境。插件直接集成到原生对话输入栏，不启动独立网页。
 
-![Conda Workspace Environment 演示](./1.gif)
+![Conda Workspace Environment 演示](./assets/demo.gif)
 
 ## 解决什么问题
 
