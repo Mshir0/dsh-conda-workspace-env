@@ -38,6 +38,44 @@ async function saveSelection(root, environment) {
   return value;
 }
 
+function environmentPython(prefix) {
+  return path.join(prefix, process.platform === 'win32' ? 'python.exe' : 'bin/python');
+}
+
+function environmentPath(prefix) {
+  const entries = process.platform === 'win32'
+    ? [prefix, path.join(prefix, 'Scripts'), path.join(prefix, 'Library', 'bin')]
+    : [path.join(prefix, 'bin')];
+  return `${entries.join(path.delimiter)}${path.delimiter}${process.env.PATH || ''}`;
+}
+
+async function selectedEnvironment(root) {
+  const selection = await readSelection(root);
+  const environment = selection.environment;
+  if (!environment?.prefix) return null;
+  return { ...environment, python: environmentPython(environment.prefix) };
+}
+
+export async function runInWorkspaceEnvironment(root, command, args = [], options = {}) {
+  const environment = await selectedEnvironment(root);
+  if (!environment) throw new Error('No Conda environment is selected for this workspace');
+  const executable = command === 'python' || command === 'python3' || command === 'python.exe' ? environment.python : command;
+  const env = {
+    ...process.env,
+    ...(options.env || {}),
+    CONDA_PREFIX: environment.prefix,
+    CONDA_DEFAULT_ENV: environment.name,
+    PATH: environmentPath(environment.prefix),
+  };
+  const { stdout, stderr } = await execFileAsync(executable, args.map(String), {
+    cwd: options.cwd || root,
+    env,
+    timeout: Math.max(1000, Math.min(120000, Number(options.timeout) || 30000)),
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  return { environment, command: executable, args: args.map(String), stdout, stderr };
+}
+
 export function apply(ctx) {
   ctx.tools.register(defineTool({
     name: 'conda_list_environments',
@@ -45,6 +83,22 @@ export function apply(ctx) {
     parameters: {},
     output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
     async execute() { return JSON.stringify(await condaEnvironments(), null, 2); },
+  }));
+  ctx.tools.register(defineTool({
+    name: 'conda_run',
+    description: 'Run one command with the Conda environment selected for the active workspace. Python commands use that environment interpreter automatically.',
+    parameters: {
+      command: { type: 'string', description: 'Executable name or path. python/python3 use the selected environment interpreter.' },
+      args: { type: 'array', items: { type: 'string' }, description: 'Command arguments.' },
+      timeout: { type: 'number', description: 'Timeout in milliseconds, from 1000 to 120000.' },
+    },
+    output: { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: value }] },
+    async execute(args, exec) {
+      const root = workspaceOf(exec);
+      if (!args?.command) throw new Error('command is required');
+      const result = await runInWorkspaceEnvironment(root, args.command, Array.isArray(args.args) ? args.args : [], { timeout: args.timeout });
+      return JSON.stringify({ environment: result.environment, command: result.command, args: result.args, stdout: result.stdout, stderr: result.stderr }, null, 2);
+    },
   }));
   ctx.tools.register(defineTool({
     name: 'conda_workspace_environment',

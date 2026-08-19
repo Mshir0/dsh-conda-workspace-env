@@ -104,6 +104,7 @@ pnpm dsh web
 | --- | --- |
 | `conda_list_environments` | 列出 Harness 主机可见的 Conda 环境及其 prefix |
 | `conda_workspace_environment` | 读取或保存当前工作区选择的环境 |
+| `conda_run` | 使用当前工作区选择的环境执行一次命令；`python` 自动使用该环境解释器 |
 
 例如，可以让 Agent 验证当前选择：
 
@@ -114,7 +115,9 @@ pnpm dsh web
 
 ## 当前行为边界
 
-这个插件只负责发现、选择和保存环境。它不会执行 `conda activate`，也不会替 Harness 修改所有命令的 `PATH` 或 Python 解释器。
+这个插件负责发现、选择和保存环境。它不会执行 `conda activate`，也不会替 Harness 修改所有原生命令的 `PATH` 或 Python 解释器。
+
+只有通过 `conda_run` 执行的命令会使用输入栏中选择的环境。Harness 原生终端仍由 Harness 主进程管理。
 
 需要运行指定环境中的 Python 时，应使用保存的 prefix 构造明确路径，例如：
 
