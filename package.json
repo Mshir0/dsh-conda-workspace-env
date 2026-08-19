@@ -1,10 +1,10 @@
 {
   "name": "dsh-conda-workspace-env",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Choose and persist a Conda environment per DeepSeek Harness workspace",
   "type": "module",
   "main": "./src/plugin.js",
-  "exports": { ".": "./src/plugin.js", "./client": "./src/client/index.js" },
+  "exports": { ".": "./src/plugin.js", "./client": "./src/client/index.js", "./package.json": "./package.json" },
   "files": ["src/", "cordis.patch.yml", "README.md", "LICENSE"],
   "dsh": {
     "bundle": { "patch": "./cordis.patch.yml" },

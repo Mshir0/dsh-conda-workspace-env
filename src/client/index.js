@@ -1,6 +1,8 @@
 (function registerCondaWorkspaceEnvClient() {
+  const bundlePath = document.currentScript?.src ? new URL(document.currentScript.src, window.location.href).pathname : '';
+  const bundleId = bundlePath.match(/\/plugins\/([^/]+)\/client\.js$/u)?.[1] || 'dsh-conda-workspace-env';
   window.__ModuleLoader__.load({
-    id: 'dsh-conda-workspace-env',
+    id: decodeURIComponent(bundleId),
     factory: require => {
       const { createElement: h, useEffect, useState } = require('react');
       const API = '/conda-workspace-env';
