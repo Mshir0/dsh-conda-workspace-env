@@ -4,19 +4,20 @@
 [![DSH plugin](https://img.shields.io/badge/DSH-plugin-2563eb)](https://github.com/topics/dsh-plugin)
 [![Conda](https://img.shields.io/badge/environment-Conda-44a833)](https://docs.conda.io/)
 
-为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 工作区选择并持久化 Conda 虚拟环境。插件直接集成到原生对话输入栏，不启动独立网页。
+这个插件给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 的每个工作区记住一个 Conda 环境。它集成在原生对话输入栏里，不需要另起网页。
 
 ![Conda Workspace Environment 演示](./assets/demo.gif)
 
-## 解决什么问题
+## 它解决什么问题
 
-同一台开发机通常存在多个 Conda 环境，而不同项目依赖的 Python、解释器和包版本并不相同。这个插件提供一个与 Harness 原生控件一致的环境选择器，让每个工作区明确记录自己应使用的 Conda prefix。
+一台机器上往往有好几个 Conda 环境，不同项目又各用各的 Python 和依赖。这个插件提供一个放在 Harness 输入栏里的环境选择器，让每个工作区记住自己的 Conda prefix。
 
-- 自动读取 `conda env list --json`。
-- 在当前工作区的对话输入栏选择环境。
-- 每个工作区独立保存选择，不会互相覆盖。
-- 支持明暗主题，按钮样式与 Harness 原生控件一致。
-- 向 Agent 提供环境查询和选择工具。
+它会：
+
+- 读取 Harness 当前能看到的 `conda env list --json`。
+- 在当前工作区的输入栏里选择环境，并单独保存选择。
+- 随工作区切换恢复对应的环境，不会串到别的项目。
+- 提供给 Agent 查询和保存环境的工具。
 - 只接受 Harness 已注册的工作区路径。
 
 ## 环境要求
@@ -66,13 +67,12 @@ pnpm dsh web
 
 修改插件源码后，重新执行 `plugin ... add -w` 并重启 Harness。
 
-## 使用方法
+## 使用
 
-1. 打开 Harness Web 界面并进入一个带工作区的会话。
-2. 在底部输入栏找到“环境”按钮。
-3. 打开菜单，选择当前项目对应的 Conda 环境。
-4. 选择结果立即保存到当前工作区。
-5. 切换工作区时，插件会读取该工作区自己的选择。
+1. 打开 Harness Web 界面，进入一个带工作区的会话。
+2. 在底部输入栏点击“环境”。
+3. 选择当前项目要用的 Conda 环境。
+4. 选择会立即保存到当前工作区；切换工作区后会读取各自的选择。
 
 选择结果保存在：
 
@@ -105,7 +105,7 @@ pnpm dsh web
 | `conda_list_environments` | 列出 Harness 主机可见的 Conda 环境及其 prefix |
 | `conda_workspace_environment` | 读取或保存当前工作区选择的环境 |
 
-可以让 Agent 验证当前选择：
+例如，可以让 Agent 验证当前选择：
 
 ```text
 调用 conda_workspace_environment 读取当前工作区选择的 Conda 环境，
@@ -114,7 +114,7 @@ pnpm dsh web
 
 ## 当前行为边界
 
-当前版本负责“发现、选择和持久化”环境，不会执行 `conda activate`，也不会自动修改 Harness 内所有命令的 `PATH` 或 Python 解释器。
+这个插件只负责发现、选择和保存环境。它不会执行 `conda activate`，也不会替 Harness 修改所有命令的 `PATH` 或 Python 解释器。
 
 需要运行指定环境中的 Python 时，应使用保存的 prefix 构造明确路径，例如：
 
@@ -122,7 +122,7 @@ pnpm dsh web
 /home/user/miniconda3/envs/project-env/bin/python --version
 ```
 
-这可以避免非交互 shell 中 `conda activate` 不生效，也能准确验证 Agent 使用了哪个解释器。
+直接使用 prefix 可以避开非交互 shell 中 `conda activate` 不生效的问题，也方便确认实际调用的是哪个解释器。
 
 ## 故障排查
 
