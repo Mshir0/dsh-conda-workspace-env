@@ -1,6 +1,6 @@
 {
   "name": "dsh-conda-workspace-env",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Choose and persist a Conda environment per DeepSeek Harness workspace",
   "type": "module",
   "main": "./src/plugin.js",
