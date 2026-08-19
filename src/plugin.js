@@ -56,6 +56,20 @@ async function selectedEnvironment(root) {
   return { ...environment, python: environmentPython(environment.prefix) };
 }
 
+function shellRunsPython(command) {
+  const source = String(command || '');
+  return /(?:^|[;&|()]\s*|\n\s*)(?:[^\s;&|()]+\/)?python(?:\d+(?:\.\d+)*)?(?:\.exe)?(?:\s|$)/iu.test(source)
+    || /\bconda\s+run\b[^\n;&|]*\bpython(?:\d+(?:\.\d+)*)?(?:\.exe)?(?:\s|$)/iu.test(source);
+}
+
+function shellCommand(exec) {
+  const name = String(exec?.name || '').toLowerCase();
+  if (!['bash', 'shell', 'terminal'].includes(name)) return '';
+  const args = exec.arguments;
+  if (typeof args === 'string') return args;
+  return args && typeof args === 'object' ? String(args.command || args.script || args.cmd || '') : '';
+}
+
 export async function runInWorkspaceEnvironment(root, command, args = [], options = {}) {
   const environment = await selectedEnvironment(root);
   if (!environment) throw new Error('No Conda environment is selected for this workspace');
@@ -83,6 +97,13 @@ export function apply(ctx) {
     order: 98,
     text: 'When the active workspace has a Conda environment selected, run Python commands with conda_run, never with Bash. Treat conda_workspace_environment as the source of truth for the selected environment. Use Bash only when no environment is selected or for commands that do not require the selected Python environment. conda_run disables user site-packages, so its reported interpreter and imports reflect the selected environment.',
   });
+  ctx.on('tools/pre-execute', async (exec, next) => {
+    const command = shellCommand(exec);
+    if (!command || !shellRunsPython(command)) return next();
+    const root = exec?.agent?.session?.header?.cwd;
+    if (!root || !(await selectedEnvironment(path.resolve(root)))) return next();
+    return { kind: 'deny', reason: 'Python execution through Bash is disabled while this workspace has a Conda environment selected. Retry with conda_run so the selected interpreter is enforced.' };
+  }, { prepend: true });
   ctx.tools.register(defineTool({
     name: 'conda_list_environments',
     description: 'List Conda environments available to the current DSH host.',
