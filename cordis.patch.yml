@@ -1,0 +1,4 @@
+# DeepSeek Harness profile bundle. The host loads the plugin; no standalone server is started.
+- insert:
+    - id: conda-workspace-env
+      name: dsh-conda-workspace-env
