@@ -119,6 +119,8 @@ pnpm dsh web
 
 只有通过 `conda_run` 执行的命令会使用输入栏中选择的环境。Harness 原生终端仍由 Harness 主进程管理。
 
+插件会要求 Agent 在已选择环境时把 Python 命令交给 `conda_run`，并设置 `PYTHONNOUSERSITE=1`，防止 `~/.local/lib/python*` 中的用户包混入空 Conda 环境。直接调用 Harness 的 Bash 仍会使用 Harness 自己的启动环境。
+
 需要运行指定环境中的 Python 时，应使用保存的 prefix 构造明确路径，例如：
 
 ```bash

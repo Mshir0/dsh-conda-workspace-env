@@ -6,7 +6,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools';
 
 const execFileAsync = promisify(execFile);
 export const name = 'conda-workspace-env';
-export const inject = ['agents', 'sessions', 'tools'];
+export const inject = ['agents', 'sessions', 'tools', 'systemPrompt'];
 
 async function condaEnvironments() {
   try {
@@ -65,6 +65,7 @@ export async function runInWorkspaceEnvironment(root, command, args = [], option
     ...(options.env || {}),
     CONDA_PREFIX: environment.prefix,
     CONDA_DEFAULT_ENV: environment.name,
+    PYTHONNOUSERSITE: '1',
     PATH: environmentPath(environment.prefix),
   };
   const { stdout, stderr } = await execFileAsync(executable, args.map(String), {
@@ -77,6 +78,11 @@ export async function runInWorkspaceEnvironment(root, command, args = [], option
 }
 
 export function apply(ctx) {
+  ctx.systemPrompt?.section?.({
+    name: 'conda-workspace-env:execution-policy',
+    order: 98,
+    text: 'When the active workspace has a Conda environment selected, run Python commands with conda_run, never with Bash. Treat conda_workspace_environment as the source of truth for the selected environment. Use Bash only when no environment is selected or for commands that do not require the selected Python environment. conda_run disables user site-packages, so its reported interpreter and imports reflect the selected environment.',
+  });
   ctx.tools.register(defineTool({
     name: 'conda_list_environments',
     description: 'List Conda environments available to the current DSH host.',
@@ -86,7 +92,7 @@ export function apply(ctx) {
   }));
   ctx.tools.register(defineTool({
     name: 'conda_run',
-    description: 'Run one command with the Conda environment selected for the active workspace. Python commands use that environment interpreter automatically.',
+    description: 'Required executor for Python commands when a Conda environment is selected for the active workspace. It uses that environment interpreter and disables user site-packages; do not substitute Bash.',
     parameters: {
       command: { type: 'string', description: 'Executable name or path. python/python3 use the selected environment interpreter.' },
       args: { type: 'array', items: { type: 'string' }, description: 'Command arguments.' },
